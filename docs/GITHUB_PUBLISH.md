@@ -1,5 +1,23 @@
 # GitHub 发布与下载安装包
 
+仓库地址：**https://github.com/DaWei2023/wechat-miniprogram-image-catcher**
+
+## 下载安装包（推荐）
+
+1. 打开 [Actions 构建页面](https://github.com/DaWei2023/wechat-miniprogram-image-catcher/actions/workflows/build-windows.yml)
+2. 点击最新 **绿色勾** 的成功运行记录
+3. 页面底部 **Artifacts** → 下载 **WxMpCatcher-Setup**
+4. 解压 zip，得到 `WxMpCatcher-Setup-0.1.0.exe`
+5. 双击安装
+
+### 命令行下载（需已登录 gh）
+
+```bash
+gh run list --workflow="Build Windows Installer" --limit 1
+gh run download <run-id> -n WxMpCatcher-Setup -D ./release
+unzip release/WxMpCatcher-Setup.zip -d release/
+```
+
 ## 一键推送并触发构建
 
 在项目根目录执行：

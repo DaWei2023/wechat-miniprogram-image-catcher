@@ -22,13 +22,16 @@ Windows 电脑版微信 4.0+ 小程序页面图片自动抓取、解密与分类
 
 ## 快速开始
 
-### 方式一：Windows 安装包（推荐）
+### 方式一：下载 Windows 安装包（推荐）
 
-在 **Windows 电脑**上获取安装包 `WxMpCatcher-Setup-0.1.0.exe`：
+1. 打开 **[GitHub Actions 构建页](https://github.com/DaWei2023/wechat-miniprogram-image-catcher/actions/workflows/build-windows.yml)**
+2. 进入最新成功的 **Build Windows Installer** 运行
+3. 下载 **Artifacts → WxMpCatcher-Setup**
+4. 解压后双击 `WxMpCatcher-Setup-0.1.0.exe` 安装
 
-**选项 A — 本地构建（需 Windows + Python 3.11+）**
+每次推送到 `main` 分支会自动重新构建安装包。
 
-双击或在 cmd 中运行：
+### 方式二：Windows 本地构建
 
 ```bat
 build\build.bat
@@ -48,11 +51,7 @@ dist\WxMpCatcher-Setup-0.1.0.exe
 
 **双击该 exe 即可安装**，无需 Python，安装完成后从开始菜单启动。
 
-**选项 B — GitHub Actions 自动构建**
-
-推送代码到 GitHub 后，Actions 会自动构建安装包，在 Artifacts 中下载 `WxMpCatcher-Setup`。
-
-### 方式二：源码运行（开发调试）
+### 方式三：源码运行（开发调试）
 
 ```bash
 cd wechat-miniprogram-image-catcher
@@ -67,7 +66,7 @@ python -m wx_mp_catcher --cli
 python -m wx_mp_catcher
 ```
 
-### 方式三：打包 exe（仅便携目录，非安装包）
+### 方式四：打包 exe（仅便携目录，非安装包）
 
 ```bash
 pip install -e ".[dev]"
