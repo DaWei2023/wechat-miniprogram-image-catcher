@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/wx_mp_catcher/
+build/pyinstaller/
+.pytest_cache/
+*.spec.bak

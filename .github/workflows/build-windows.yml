@@ -1,0 +1,56 @@
+name: Build Windows Installer
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { throw "Inno Setup not found at $iscc" }
+          Write-Host "Using ISCC: $iscc"
+          .\build\build_installer.ps1
+
+      - name: Verify installer
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist/WxMpCatcher-Setup-*.exe | Select-Object -First 1
+          if (-not $setup) { throw "Installer exe not found in dist/" }
+          Write-Host "Installer: $($setup.FullName) ($([math]::Round($setup.Length/1MB, 2)) MB)"
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: WxMpCatcher-Setup
+          path: dist/WxMpCatcher-Setup-*.exe
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Upload portable bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: WxMpCatcher-Portable
+          path: dist/wx-mp-catcher/
+          retention-days: 90
+          if-no-files-found: error
