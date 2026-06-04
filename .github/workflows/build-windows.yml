@@ -13,9 +13,9 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -35,7 +35,7 @@ jobs:
           Write-Host "Installer: $($setup.FullName) ($([math]::Round($setup.Length/1MB, 2)) MB)"
 
       - name: Upload installer artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: WxMpCatcher-Setup
           path: dist/WxMpCatcher-Setup-*.exe
@@ -43,7 +43,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload portable bundle
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: WxMpCatcher-Portable
           path: dist/wx-mp-catcher/
