@@ -61,6 +61,9 @@ foreach ($c in $candidates) {
 }
 
 if (-not $Iscc) {
+    if ($env:CI -eq "true" -or $env:GITHUB_ACTIONS -eq "true") {
+        throw "CI 构建失败: 未找到 Inno Setup ISCC.exe"
+    }
     Write-Host "未检测到 Inno Setup，尝试 winget 安装..." -ForegroundColor Yellow
     winget install --id JRSoftware.InnoSetup -e --accept-source-agreements --accept-package-agreements
     foreach ($c in $candidates) {

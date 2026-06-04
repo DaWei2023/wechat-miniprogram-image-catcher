@@ -48,9 +48,17 @@ dist\WxMpCatcher-Setup-0.1.0.exe
 
 **双击该 exe 即可安装**，无需 Python，安装完成后从开始菜单启动。
 
-**选项 B — GitHub Actions 自动构建**
+**选项 B — GitHub Actions 自动构建（推荐，无需本地 Windows 构建）**
 
-推送代码到 GitHub 后，Actions 会自动构建安装包，在 Artifacts 中下载 `WxMpCatcher-Setup`。
+```bash
+# 安装 GitHub CLI 后一键发布并下载安装包
+chmod +x scripts/publish_github.sh
+./scripts/publish_github.sh
+```
+
+或手动推送后，在 GitHub **Actions → Artifacts** 下载 `WxMpCatcher-Setup`。
+
+详细步骤见 [docs/GITHUB_PUBLISH.md](docs/GITHUB_PUBLISH.md)
 
 ### 方式二：源码运行（开发调试）
 

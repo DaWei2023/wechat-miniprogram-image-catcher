@@ -27,9 +27,8 @@ jobs:
       - name: Build installer
         shell: pwsh
         run: |
-          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-          if (-not (Test-Path $iscc)) { throw "Inno Setup not found at $iscc" }
-          Write-Host "Using ISCC: $iscc"
+          $env:CI = "true"
+          $env:GITHUB_ACTIONS = "true"
           .\build\build_installer.ps1
 
       - name: Verify installer
