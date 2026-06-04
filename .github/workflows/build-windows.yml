@@ -11,12 +11,11 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+    timeout-minutes: 45
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
@@ -26,19 +25,16 @@ jobs:
 
       - name: Build installer
         shell: pwsh
-        run: |
-          $env:CI = "true"
-          $env:GITHUB_ACTIONS = "true"
-          .\build\build_installer.ps1
+        run: .\build\build_installer.ps1
 
-      - name: Verify installer
+      - name: Verify installer exists
         shell: pwsh
         run: |
           $setup = Get-ChildItem dist/WxMpCatcher-Setup-*.exe | Select-Object -First 1
-          if (-not $setup) { throw "Installer exe not found in dist/" }
+          if (-not $setup) { throw "Installer exe not found under dist/" }
           Write-Host "Installer: $($setup.FullName) ($([math]::Round($setup.Length/1MB, 2)) MB)"
 
-      - name: Upload installer
+      - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: WxMpCatcher-Setup
@@ -53,3 +49,14 @@ jobs:
           path: dist/wx-mp-catcher/
           retention-days: 90
           if-no-files-found: error
+
+      - name: Build summary
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist/WxMpCatcher-Setup-*.exe | Select-Object -First 1
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Windows 安装包构建成功"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- 安装包: ``$($setup.Name)``"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- 大小: $([math]::Round($setup.Length/1MB, 2)) MB"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "在 **Actions → 本次运行 → Artifacts** 中下载 ``WxMpCatcher-Setup``。"
