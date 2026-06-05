@@ -12,6 +12,7 @@ from typing import Callable
 
 from wx_mp_catcher.config import AppConfig
 from wx_mp_catcher.decrypt.dat import aes_key_from_hex, decrypt_file
+from wx_mp_catcher.license.manager import LicenseManager, LicenseStatus
 from wx_mp_catcher.paths import extract_appid_from_path
 from wx_mp_catcher.pipeline.classifier import ImageClassifier
 from wx_mp_catcher.pipeline.dedup import DedupStore
@@ -31,12 +32,16 @@ class FilePipeline:
         config: AppConfig,
         dedup: DedupStore,
         tracker: MiniProgramTracker,
+        license_manager: LicenseManager | None = None,
         on_saved: Callable[[Path], None] | None = None,
+        on_trial_blocked: Callable[[], None] | None = None,
     ) -> None:
         self.config = config
         self.dedup = dedup
         self.tracker = tracker
+        self.license = license_manager
         self.on_saved = on_saved
+        self.on_trial_blocked = on_trial_blocked
         self.classifier = ImageClassifier(config)
         self.exporter = ImageExporter(self.classifier, dedup)
         self._start_time = time.time()
@@ -58,8 +63,14 @@ class FilePipeline:
         with self._lock:
             self._queue.append(path)
 
-    def reload_config(self, config: AppConfig) -> None:
+    def reload_config(
+        self,
+        config: AppConfig,
+        license_manager: LicenseManager | None = None,
+    ) -> None:
         self.config = config
+        if license_manager is not None:
+            self.license = license_manager
         self.classifier = ImageClassifier(config)
         self.exporter = ImageExporter(self.classifier, self.dedup)
 
@@ -79,6 +90,11 @@ class FilePipeline:
 
     def _handle_file(self, path: Path) -> None:
         if self.config.paused:
+            return
+        if self.license and not self.license.can_save_image():
+            logger.info("试用额度已用尽，跳过保存")
+            if self.on_trial_blocked:
+                self.on_trial_blocked()
             return
         if not path.is_file():
             return
@@ -117,6 +133,8 @@ class FilePipeline:
             app_from_path,
         )
         if saved:
+            if self.license:
+                self.license.record_image_saved()
             self.saved_count += 1
             today = datetime.now().date()
             if today != self._today:

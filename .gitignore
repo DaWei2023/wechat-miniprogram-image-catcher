@@ -4,6 +4,7 @@ __pycache__/
 *.egg-info/
 dist/
 release/
+server/data/
 build/wx_mp_catcher/
 build/pyinstaller/
 .pytest_cache/

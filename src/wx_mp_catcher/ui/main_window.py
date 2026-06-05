@@ -29,6 +29,8 @@ class MainWindow(QMainWindow):
 
     image_saved = Signal(str)
     settings_requested = Signal()
+    activate_requested = Signal()
+    trial_blocked = Signal()
 
     def __init__(self, service: CatcherService, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -58,9 +60,11 @@ class MainWindow(QMainWindow):
         self.lbl_watch = QLabel("0")
         self.lbl_output = QLabel("—")
         self.lbl_key = QLabel("—")
+        self.lbl_license = QLabel("—")
 
         rows = [
             ("监听状态", self.lbl_status),
+            ("授权状态", self.lbl_license),
             ("当前小程序", self.lbl_app),
             ("页面会话", self.lbl_session),
             ("今日抓取", self.lbl_today),
@@ -90,11 +94,14 @@ class MainWindow(QMainWindow):
         btn_open_dir.clicked.connect(self._open_output_dir)
         btn_settings = QPushButton("设置")
         btn_settings.clicked.connect(self.settings_requested.emit)
+        btn_activate = QPushButton("激活软件")
+        btn_activate.clicked.connect(self.activate_requested.emit)
         btn_tray = QPushButton("最小化到托盘")
         btn_tray.clicked.connect(self.hide)
         btn_row.addWidget(self.btn_pause)
         btn_row.addWidget(btn_open_dir)
         btn_row.addWidget(btn_settings)
+        btn_row.addWidget(btn_activate)
         btn_row.addWidget(btn_tray)
         layout.addLayout(btn_row)
 
@@ -122,6 +129,13 @@ class MainWindow(QMainWindow):
         else:
             self.lbl_key.setText("未配置（V2 图片无法解密）")
             self.lbl_key.setStyleSheet("color: orange;")
+        self.lbl_license.setText(self.service.license.status_text())
+        if self.service.license.is_licensed():
+            self.lbl_license.setStyleSheet("color: green;")
+        elif self.service.license.get_status().value == "trial_expired":
+            self.lbl_license.setStyleSheet("color: red;")
+        else:
+            self.lbl_license.setStyleSheet("color: #0066cc;")
 
     def add_capture(self, saved_path: str) -> None:
         path = Path(saved_path)

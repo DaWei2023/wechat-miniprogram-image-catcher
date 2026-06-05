@@ -7,6 +7,8 @@ import threading
 from pathlib import Path
 
 from wx_mp_catcher.config import AppConfig, ConfigManager
+from wx_mp_catcher.license.constants import DEFAULT_LICENSE_SERVER_URL
+from wx_mp_catcher.license.manager import LicenseManager, LicenseStatus
 from wx_mp_catcher.decrypt.key_finder import find_image_aes_key_hex_monitor
 from wx_mp_catcher.paths import discover_watch_paths
 from wx_mp_catcher.pipeline.dedup import DedupStore
@@ -21,6 +23,8 @@ class CatcherService:
     def __init__(self, config_manager: ConfigManager | None = None) -> None:
         self.config_manager = config_manager or ConfigManager()
         self.config = self.config_manager.load()
+        server_url = self.config.license_server_url or DEFAULT_LICENSE_SERVER_URL
+        self.license = LicenseManager(server_url=server_url)
         self.dedup = DedupStore(self.config_manager.dedup_db_path)
         self.tracker = MiniProgramTracker(
             session_idle_minutes=self.config.session_idle_minutes,
@@ -30,6 +34,7 @@ class CatcherService:
             self.config,
             self.dedup,
             self.tracker,
+            license_manager=self.license,
         )
         self.watcher = WatchService(self.pipeline)
         self._running = False
@@ -50,7 +55,10 @@ class CatcherService:
         if self._running:
             return
         self.config = self.config_manager.load()
-        self.pipeline.reload_config(self.config)
+        server_url = self.config.license_server_url or DEFAULT_LICENSE_SERVER_URL
+        self.license = LicenseManager(server_url=server_url)
+        self.pipeline.reload_config(self.config, self.license)
+        self.license.refresh_from_server()
         self.tracker.update_aliases(self.config.app_aliases)
         self.tracker.update_session_idle(self.config.session_idle_minutes)
         self.tracker.start()
@@ -72,11 +80,13 @@ class CatcherService:
     def set_paused(self, paused: bool) -> None:
         self.config.paused = paused
         self.config_manager.save(self.config)
-        self.pipeline.reload_config(self.config)
+        self.pipeline.reload_config(self.config, self.license)
 
     def reload_config(self) -> None:
         self.config = self.config_manager.load()
-        self.pipeline.reload_config(self.config)
+        server_url = self.config.license_server_url or DEFAULT_LICENSE_SERVER_URL
+        self.license = LicenseManager(server_url=server_url)
+        self.pipeline.reload_config(self.config, self.license)
         self.tracker.update_aliases(self.config.app_aliases)
         self.tracker.update_session_idle(self.config.session_idle_minutes)
         if self._running:

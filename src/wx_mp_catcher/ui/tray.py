@@ -28,12 +28,15 @@ class TrayApplication:
 
         self.main_window = MainWindow(service)
         self.main_window.settings_requested.connect(self._show_settings)
+        self.main_window.activate_requested.connect(self._show_activation)
         self.main_window.set_tray_hint(self._show_tray_message)
 
         self.settings_window: SettingsWindow | None = None
         self.wizard: FirstRunWizard | None = None
 
         self.service.pipeline.on_saved = self._on_image_saved_threadsafe
+        self.service.pipeline.on_trial_blocked = self._on_trial_blocked
+        self.main_window.trial_blocked.connect(self._handle_trial_blocked)
 
         self.tray = QSystemTrayIcon(self.app)
         self.tray.setToolTip("微信小程序图片抓取")
@@ -64,6 +67,10 @@ class TrayApplication:
         settings = QAction("设置", menu)
         settings.triggered.connect(self._show_settings)
         menu.addAction(settings)
+
+        activate = QAction("激活软件", menu)
+        activate.triggered.connect(self._show_activation)
+        menu.addAction(activate)
 
         menu.addSeparator()
         quit_action = QAction("退出", menu)
@@ -100,6 +107,22 @@ class TrayApplication:
         self.action_pause.setText("恢复监听" if paused else "暂停监听")
         self.main_window.refresh_status()
         self._update_tooltip()
+
+    def _show_activation(self) -> None:
+        from wx_mp_catcher.ui.activation_dialog import ActivationDialog
+
+        dialog = ActivationDialog(self.service.license, self.main_window)
+        if dialog.exec():
+            self.main_window.refresh_status()
+            self._update_tooltip()
+
+    def _on_trial_blocked(self) -> None:
+        self.main_window.trial_blocked.emit()
+
+    def _handle_trial_blocked(self) -> None:
+        self.main_window.refresh_status()
+        self._show_main()
+        self._show_activation()
 
     def _show_settings(self) -> None:
         if self.settings_window is None:

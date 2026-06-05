@@ -40,6 +40,7 @@ class AppConfig(BaseModel):
     session_idle_minutes: int = 30
     only_after_start: bool = True
     image_aes_key_hex: str | None = None
+    license_server_url: str = ""
     app_aliases: dict[str, str] = Field(default_factory=dict)
     wizard_completed: bool = False
     paused: bool = False

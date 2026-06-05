@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from wx_mp_catcher.config import AppConfig
+from wx_mp_catcher.license.constants import DEFAULT_LICENSE_SERVER_URL
 from wx_mp_catcher.paths import discover_watch_paths
 from wx_mp_catcher.service import CatcherService
 
@@ -92,6 +93,20 @@ class SettingsWindow(QDialog):
         key_layout.addWidget(extract_btn)
         layout.addWidget(key_group)
 
+        # 授权
+        lic_group = QGroupBox("软件授权")
+        lic_layout = QVBoxLayout(lic_group)
+        self.license_status = QLabel()
+        self.server_edit = QLineEdit()
+        self.server_edit.setPlaceholderText("授权服务器地址，留空使用默认")
+        activate_btn = QPushButton("输入激活码")
+        activate_btn.clicked.connect(self._show_activation)
+        lic_layout.addWidget(self.license_status)
+        lic_layout.addWidget(QLabel("授权服务器："))
+        lic_layout.addWidget(self.server_edit)
+        lic_layout.addWidget(activate_btn)
+        layout.addWidget(lic_group)
+
         # 监听路径
         path_group = QGroupBox("监听路径")
         path_layout = QVBoxLayout(path_group)
@@ -124,8 +139,28 @@ class SettingsWindow(QDialog):
         self.chk_only_new.setChecked(cfg.only_after_start)
         self.session_idle.setValue(cfg.session_idle_minutes)
         self.key_edit.setText(cfg.image_aes_key_hex or "")
+        self.server_edit.setText(cfg.license_server_url or DEFAULT_LICENSE_SERVER_URL)
         self._update_key_status()
+        self._update_license_status()
         self._refresh_paths_label()
+
+    def _update_license_status(self) -> None:
+        text = self.service.license.status_text()
+        device = self.service.license.state.device_id[:12]
+        self.license_status.setText(f"{text}\n设备 ID: {device}…")
+        if self.service.license.is_licensed():
+            self.license_status.setStyleSheet("color: green;")
+        elif self.service.license.get_status().value == "trial_expired":
+            self.license_status.setStyleSheet("color: red;")
+        else:
+            self.license_status.setStyleSheet("color: #0066cc;")
+
+    def _show_activation(self) -> None:
+        from wx_mp_catcher.ui.activation_dialog import ActivationDialog
+
+        dialog = ActivationDialog(self.service.license, self)
+        if dialog.exec():
+            self._update_license_status()
 
     def _update_key_status(self) -> None:
         if self.service.config.image_aes_key_hex:
@@ -183,11 +218,13 @@ class SettingsWindow(QDialog):
             session_idle_minutes=self.session_idle.value(),
             only_after_start=self.chk_only_new.isChecked(),
             image_aes_key_hex=self.key_edit.text().strip() or None,
+            license_server_url=self.server_edit.text().strip() or DEFAULT_LICENSE_SERVER_URL,
             app_aliases=self.service.config.app_aliases,
             wizard_completed=True,
             paused=self.service.config.paused,
         )
         self.service.save_config(cfg)
         self._update_key_status()
+        self._update_license_status()
         QMessageBox.information(self, "已保存", "设置已保存并生效。")
         self.accept()

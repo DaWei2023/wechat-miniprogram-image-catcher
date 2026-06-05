@@ -2,7 +2,7 @@
 
 #define MyAppName "微信小程序图片抓取工具"
 #define MyAppNameEn "WxMpCatcher"
-#define MyAppVersion "0.1.2"
+#define MyAppVersion "0.2.0"
 #define MyAppPublisher "WxMpCatcher"
 #define MyAppExeName "wx-mp-catcher.exe"
 #define MyAppURL "https://github.com/DaWei2023/wechat-miniprogram-image-catcher"
