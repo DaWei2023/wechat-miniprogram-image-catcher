@@ -5,29 +5,36 @@ from __future__ import annotations
 import logging
 import platform
 import re
-import struct
+import threading
 from typing import Iterator
 
 import psutil
 
 logger = logging.getLogger(__name__)
 
-WECHAT_PROCESS_NAMES = ("WeChat.exe", "Weixin.exe", "WeChatAppEx.exe")
+WECHAT_PROCESS_NAMES = ("WeChat.exe", "Weixin.exe")
+WECHAT_PROCESS_NAMES_FALLBACK = ("WeChatAppEx.exe",)
 # 16 字节可打印/二进制 AES key 候选：前后为非 hex 边界
 AES_KEY_PATTERN = re.compile(rb"(?<![0-9a-fA-F])([0-9a-fA-F]{32})(?![0-9a-fA-F])")
 
 
 def _iter_wechat_processes() -> Iterator[psutil.Process]:
-    for proc in psutil.process_iter(["pid", "name"]):
-        try:
-            name = proc.info.get("name") or proc.name()
-            if name in WECHAT_PROCESS_NAMES:
-                yield proc
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            continue
+    seen: set[int] = set()
+    for names in (WECHAT_PROCESS_NAMES, WECHAT_PROCESS_NAMES_FALLBACK):
+        for proc in psutil.process_iter(["pid", "name"]):
+            try:
+                pid = proc.info.get("pid") or proc.pid
+                if pid in seen:
+                    continue
+                name = proc.info.get("name") or proc.name()
+                if name in names:
+                    seen.add(pid)
+                    yield proc
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
 
 
-def _read_process_memory(proc: psutil.Process, max_regions: int = 200) -> bytes:
+def _read_process_memory(proc: psutil.Process, max_regions: int = 60) -> bytes:
     """读取进程可读内存区域（仅 Windows 完整支持）."""
     if platform.system() != "Windows":
         return b""
@@ -88,7 +95,7 @@ def _read_process_memory(proc: psutil.Process, max_regions: int = 200) -> bytes:
             base = mbi.BaseAddress or 0
             size = mbi.RegionSize or 0
             # MEM_COMMIT=0x1000, readable pages
-            if mbi.State == 0x1000 and size > 0 and size < 50 * 1024 * 1024:
+            if mbi.State == 0x1000 and 0 < size < 16 * 1024 * 1024:
                 buf = ctypes.create_string_buffer(size)
                 bytes_read = ctypes.c_size_t(0)
                 ok = kernel32.ReadProcessMemory(
@@ -165,6 +172,7 @@ def find_image_aes_key_hex(timeout_scan: int = 1) -> str | None:
 def find_image_aes_key_hex_monitor(
     duration_seconds: float = 30.0,
     interval: float = 2.0,
+    cancel_event: threading.Event | None = None,
 ) -> str | None:
     """持续监控模式：在用户查看图片期间轮询扫描."""
     import time
@@ -172,9 +180,14 @@ def find_image_aes_key_hex_monitor(
     deadline = time.time() + duration_seconds
     found: str | None = None
     while time.time() < deadline:
+        if cancel_event and cancel_event.is_set():
+            return None
         key = find_image_aes_key_hex()
         if key:
             found = key
             break
-        time.sleep(interval)
+        if cancel_event and cancel_event.wait(timeout=interval):
+            return None
+        else:
+            time.sleep(interval)
     return found

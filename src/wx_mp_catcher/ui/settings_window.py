@@ -158,21 +158,18 @@ class SettingsWindow(QDialog):
             self._refresh_paths_label()
 
     def _extract_key(self) -> None:
-        QMessageBox.information(
-            self,
-            "提取密钥",
-            "请先在微信中打开并查看 2-3 张图片（点击看大图），然后点击确定开始扫描（约 30 秒）。",
-        )
-        key = self.service.extract_image_key(monitor_seconds=30.0)
-        if key:
-            self.key_edit.setText(key)
+        from wx_mp_catcher.ui.key_extract_worker import extract_key_with_dialog
+
+        result = extract_key_with_dialog(self, self.service, duration_seconds=30.0)
+        if result.key:
+            self.key_edit.setText(result.key)
             self._update_key_status()
-            QMessageBox.information(self, "成功", f"密钥已保存: {key[:8]}...")
-        else:
+            QMessageBox.information(self, "成功", f"密钥已保存: {result.key[:8]}...")
+        elif result.started and not result.canceled:
             QMessageBox.warning(
                 self,
                 "未找到密钥",
-                "未能从微信进程提取密钥。请确认微信正在运行，或手动粘贴密钥。",
+                "未能从微信进程提取密钥。请确认微信正在运行，并在微信里查看 2–3 张大图后重试，或手动粘贴密钥。",
             )
 
     def _save(self) -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 from pathlib import Path
 
 from wx_mp_catcher.config import AppConfig, ConfigManager
@@ -86,8 +87,15 @@ class CatcherService:
         self.config_manager.save(config)
         self.reload_config()
 
-    def extract_image_key(self, monitor_seconds: float = 30.0) -> str | None:
-        key = find_image_aes_key_hex_monitor(duration_seconds=monitor_seconds)
+    def extract_image_key(
+        self,
+        monitor_seconds: float = 30.0,
+        cancel_event: threading.Event | None = None,
+    ) -> str | None:
+        key = find_image_aes_key_hex_monitor(
+            duration_seconds=monitor_seconds,
+            cancel_event=cancel_event,
+        )
         if key:
             self.config.image_aes_key_hex = key
             self.config_manager.save(self.config)

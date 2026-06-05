@@ -99,11 +99,13 @@ class KeyPage(QWizardPage):
         layout.addWidget(extract)
 
     def _extract(self) -> None:
-        key = self.service.extract_image_key(monitor_seconds=20.0)
-        if key:
-            self.key_edit.setText(key)
+        from wx_mp_catcher.ui.key_extract_worker import extract_key_with_dialog
+
+        result = extract_key_with_dialog(self, self.service, duration_seconds=20.0)
+        if result.key:
+            self.key_edit.setText(result.key)
             QMessageBox.information(self, "成功", "密钥已提取并保存。")
-        else:
+        elif result.started and not result.canceled:
             QMessageBox.warning(self, "提示", "暂未找到密钥，可稍后在设置中重试。")
 
 
