@@ -81,7 +81,7 @@ Write-Host "Inno Setup 编译安装包..."
 & $Iscc "build\installer.iss"
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup 编译失败" }
 
-$SetupExe = Join-Path $ProjectRoot "dist\WxMpCatcher-Setup-0.1.0.exe"
+$SetupExe = Join-Path $ProjectRoot "dist\WxMpCatcher-Setup-0.1.1.exe"
 Write-Host ""
 Write-Host "=== 构建成功 ===" -ForegroundColor Green
 Write-Host "安装包: $SetupExe"

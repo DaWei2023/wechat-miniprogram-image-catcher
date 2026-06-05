@@ -1,12 +1,11 @@
-; Inno Setup 安装脚本 — 生成 WxMpCatcher-Setup.exe
-; 编译: iscc build\installer.iss
+; Inno Setup 安装脚本 — 生成 WxMpCatcher-Setup.exe（简体中文界面）
 
 #define MyAppName "微信小程序图片抓取工具"
 #define MyAppNameEn "WxMpCatcher"
-#define MyAppVersion "0.1.0"
+#define MyAppVersion "0.1.1"
 #define MyAppPublisher "WxMpCatcher"
 #define MyAppExeName "wx-mp-catcher.exe"
-#define MyAppURL "https://github.com/local/wx-mp-catcher"
+#define MyAppURL "https://github.com/DaWei2023/wechat-miniprogram-image-catcher"
 
 [Setup]
 AppId={{A8F3C2E1-9B4D-4A2F-8E7C-1D5F6A9B0C3E}
@@ -28,15 +27,16 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
-LicenseFile=..\assets\LICENSE.txt
+LicenseFile=..\assets\LICENSE_zh.txt
 InfoBeforeFile=..\assets\INSTALL_README.txt
+ShowLanguageDialog=no
 
 [Languages]
-Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "chinesesimplified"; MessagesFile: "..\assets\innosetup\ChineseSimplified.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加图标:"; Flags: unchecked
-Name: "startup"; Description: "开机自动启动（登录后运行）"; GroupDescription: "其他:"; Flags: unchecked
+Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加选项："; Flags: unchecked
+Name: "startup"; Description: "开机自动启动（登录后运行）"; GroupDescription: "附加选项："; Flags: unchecked
 
 [Files]
 Source: "..\dist\wx-mp-catcher\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -60,3 +60,8 @@ function InitializeSetup(): Boolean;
 begin
   Result := True;
 end;
+
+[CustomMessages]
+chinesesimplified.LicenseLabel=安装前请阅读下列重要信息。
+chinesesimplified.LicenseAccepted=我同意(&A)
+chinesesimplified.LicenseNotAccepted=我不同意(&D)

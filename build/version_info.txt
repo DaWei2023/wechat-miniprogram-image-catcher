@@ -1,7 +1,7 @@
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(0, 1, 0, 0),
-    prodvers=(0, 1, 0, 0),
+    filevers=(0, 1, 1, 0),
+    prodvers=(0, 1, 1, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -16,11 +16,11 @@ VSVersionInfo(
         [
           StringStruct('CompanyName', 'WxMpCatcher'),
           StringStruct('FileDescription', '微信小程序图片抓取工具'),
-          StringStruct('FileVersion', '0.1.0.0'),
+          StringStruct('FileVersion', '0.1.1.0'),
           StringStruct('InternalName', 'wx-mp-catcher'),
           StringStruct('OriginalFilename', 'wx-mp-catcher.exe'),
           StringStruct('ProductName', '微信小程序图片抓取工具'),
-          StringStruct('ProductVersion', '0.1.0.0'),
+          StringStruct('ProductVersion', '0.1.1.0'),
         ]
       )
     ]),

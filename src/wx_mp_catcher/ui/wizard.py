@@ -125,6 +125,10 @@ class FirstRunWizard(QWizard):
         self.addPage(self.key_page)
 
         self.setOption(QWizard.WizardOption.NoCancelButton, False)
+        self.setButtonText(QWizard.WizardButton.BackButton, "上一步")
+        self.setButtonText(QWizard.WizardButton.NextButton, "下一步")
+        self.setButtonText(QWizard.WizardButton.FinishButton, "完成")
+        self.setButtonText(QWizard.WizardButton.CancelButton, "取消")
 
     def accept(self) -> None:
         cfg = AppConfig(

@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 dist/
+release/
 build/wx_mp_catcher/
 build/pyinstaller/
 .pytest_cache/
